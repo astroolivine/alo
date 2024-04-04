@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jun 13 10:00:27 2022
+
+@author: garsnow1
+
+To use this script, update the path names referring to Excel workbooks with your own. Read the comments below explaining the function and syntax of code.
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+class Star:
+    def __init__(self, name, n_g_p=0, n_g_s=0, n_s_s=0, n_m=0):
+        # name: star name
+        # n_g_p: number of ground photometry data sets in Excel Workbook "Ground_Photometry_Data.xlsx"
+        # n_g_s: number of ground spectroscopy data sets in Excel Workbook "Ground_Spec_Data.xlsx"
+        # n_s_s: number of space spectroscopy data sets in Excel Workbook "Space_Spec_Data.xlsx"
+        # n_m: number of models in Excel Workbook "Model_SEDs.xlsx"
+        
+        # Assignment of stellar properties contained in Excel Workbook "Star_Properties" to stars in list Star.names
+        # When stars are added to class, they should be appended to this list as well as defined below under if __name__ == '__main__'
+        Star.names = ['R_Aqr', 'RU_Vul', 'R_Aql', 'R_Hya', 'W_Hya', 'tet_Aps', 'R_Crt', 'R_Leo', 'T_Mic', 'RT_Vir', 'pi1_Gru', 'omi_Ori', 'S_Ori', 'GX_Mon', 'R_Cnc', 'SV_Psc', 'RR_Aql', 'OH_26506', 'RR_Sco', 'R_Aur', 'SW_Vir', 'RX_Boo', 'RS_Lib', 'RT_Sco', 'RU_Sco', 'HD65750', 'WX_Psc', 'IRAS_16342_3814', 'U_Her', 'TX_Cam', 'X_Her', 'W_Aql', 'CH_Cyg', 'GY_Aql', 'BI_Cyg', 'V_Cyg', 'T_Cep', 'EP_Aqr', 'R_Cas', 'HV12956', 'IRAS_04407_7000', 'IRAS_04498_6842', 'IRAS_05112_6755', 'OH_231842', 'LEID_33062']
+        Star.prop_indices_dict = dict(zip(Star.names, range(1, len(Star.names) + 1)))   # Make dicitionary with star name keys associated to integer values representing a star's row in Star Properties sheet.
+        Star.prop_table = pd.read_excel(r'/Users/garsnow1/Documents/Star_Properties.xlsx', header=None).to_numpy()    # Replace path with yours, corresponding to Star_Properties Excel Workbook.
+        Star.col_names = Star.prop_table[0, :].tolist()
+        
+        self.name = name
+        
+        self.properties = Star.prop_table[Star.prop_indices_dict[self.name], :].tolist()  # Object's property list.
+            
+        for i in range(1, len(self.properties)):
+            setattr(self, Star.col_names[i], self.properties[i])    # Gives the object the attributes of the Star_Properties sheet's column names. Ex. R Aql has attributes R_Aql.period, R_Aql.T_eff, R_Aql.T_eff_source, and so on. These can be accessed and used.
+        
+        self.photometry_log = pd.read_excel(r'/Users/garsnow1/Documents/Photometry_Data/VizieR_Photometry_Data.xlsx', sheet_name=self.name, header=None)    # Replace path with yours, corresponding to VizieR_Photometry_Data Excel Workbook. The sheet names should be exactly the star names.
+        
+        self.photometry_data = self.photometry_log.iloc[:, 6:9].to_numpy()  # self.photometry_data is columns 7-9 (7: wavelength (microns), 8: flux density (Jy), 9: flux uncertainty (Jy)) of imported log.
+        self.photometry_data[np.isnan(self.photometry_data) == True] = 0    # Replaces NaN values with 0.
+        self.photometry_data = self.photometry_data[self.photometry_data.any(axis=1)]   # Deletes rows that are full of zeroes.
+        
+        self.n_g_p = n_g_p
+        
+        if self.n_g_p == 0:
+            self.ground_phot_data = None
+        else:
+            self.ground_phot_data = []
+            for i in range(self.n_g_p):
+                self.ground_phot_data += [pd.read_excel(r'/Users/garsnow1/Documents/Photometry_Data/Ground_Photometry_Data.xlsx', header=None, sheet_name=self.name + str(i+1)).to_numpy()]   # Replace path with yours, corresponding to Ground_Photometry_Data Excel Workbook. The sheet names should be the star name and then a number >=1. Ex. R_Aqr1
+            
+        self.n_g_s = n_g_s
+        
+        if self.n_g_s == 0:
+            self.ground_spec_data = None
+        else:
+            self.ground_spec_data = []
+            for i in range(self.n_g_s):
+                self.ground_spec_data += [pd.read_excel(r'/Users/garsnow1/Documents/Spectroscopy_Data/Ground_Spectroscopy/Ground_Spec_Data.xlsx', header=None, sheet_name=self.name + str(i+1)).to_numpy()]   # Replace path with yours, corresponding to Ground_Spec_Data Excel Workbook. The sheet names should be the star name and then a number >=1. Ex. R_Aqr1
+    
+        self.n_s_s = n_s_s
+        
+        if self.n_s_s == 0:
+            self.space_spec_log = None
+            self.space_spec_data = None
+        else:
+            self.space_spec_log = []
+            self.space_spec_data = []
+            for i in range(self.n_s_s):
+                self.space_spec_log += [pd.read_excel(r'/Users/garsnow1/Documents/Spectroscopy_Data/Space_Spectroscopy/Space_Spec_Data.xlsx', header=None, sheet_name=self.name + str(i+1)).to_numpy()]   # Replace path with yours, corresponding to Space_Spec_Data Excel Workbook. The sheet names should be the star name and then a number >=1. Ex. R_Aqr1
+                self.space_spec_data += [np.delete(self.space_spec_log[i], 2, 1)]   # Third column of each imported table is deleted. So new entries should have a meaningless third column initially.
+            
+        self.n_m = n_m
+        
+        if self.n_m == 0:
+            self.model_data = None
+        else:
+            self.model_data = []
+            for i in range(self.n_m):
+                self.model_data += [pd.read_excel(r'/Users/garsnow1/Documents/Models/Model_SEDs.xlsx', header=None, sheet_name=self.name + str(i+1)).to_numpy()] # Replace path with yours, corresponding to Model_SEDs Excel Workbook. The sheet names should be the star name and then a number >=1. Ex. R_Aqr1
+            
+    def sed_plot(self, s_n=1, g_n=1, p_n=1, m_n=1, axis=111, log=0, xmin=0, xmax=50, ymin=0, ymax=3000):    # s_n and g_n are the indices of the desired element of the space_spec_data and ground_spec_data lists, respectively.
+        # s_n is the number (>=1) corresponding to the data set in the self.space_spec_data list desired to plot. 
+        # Likewise, g_n is for self.ground_spec_data, p_n is for self.ground_phot_data, m_n is for self.model_data
+        # axis is the plot number. If multiple plots per script run are desired, different axis values can be specfied.
+        # log !=0 means the plot will be in log-log scale.
+        # xmin and xmax are lower and upper limits on horizontal axis values. Same with ymin and ymax for vertical axis.        
+        
+        #The entries of self.photometry_data, self.space_spec_data, self.ground_spec_data, self.ground_phot_data, and self.model_data lists should have three columns: wavelength in microns, flux density in Jy, and flux uncertainty in Jy (in that order).
+        lambda_p = self.photometry_data[:, 0]
+        F_p = self.photometry_data[:, 1]
+        eF_p = self.photometry_data[:, 2]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(axis)
+        
+        ax.scatter(lambda_p, F_p, s=1, linewidths=1, color='y', label='VizieR phot')
+        ax.errorbar(lambda_p, F_p, yerr=eF_p, ecolor='y', elinewidth=1, ls='none')
+        
+        if self.n_g_p != 0:
+            lambda_gp = self.ground_phot_data[p_n-1][:, 0]
+            F_gp = self.ground_phot_data[p_n-1][:, 1]
+            eF_gp = self.ground_phot_data[p_n-1][:, 2]
+            ax.scatter(lambda_gp, F_gp, s=1, color ='c', linewidths=1, label='ground phot')
+            ax.errorbar(lambda_gp, F_gp, yerr=eF_gp, ecolor='c', elinewidth=1, ls='none')
+
+        if self.n_g_s != 0:
+            lambda_g = self.ground_spec_data[g_n-1][:, 0]
+            F_g = self.ground_spec_data[g_n-1][:, 1]
+            eF_g = self.ground_spec_data[g_n-1][:, 2]
+            ax.scatter(lambda_g, F_g, s=1, color ='g', linewidths=1, label='ground spec')
+            ax.errorbar(lambda_g, F_g, yerr=eF_g, ecolor='g', elinewidth=1, ls='none')
+            
+        if self.n_s_s != 0:
+            lambda_s = self.space_spec_data[s_n-1][:, 0]
+            F_s = self.space_spec_data[s_n-1][:, 1]
+            eF_s = self.space_spec_data[s_n-1][:, 2]
+            ax.scatter(lambda_s, F_s, s=1, color ='b', linewidths=1, label='space spec')
+            ax.errorbar(lambda_s, F_s, yerr=eF_s, ecolor='b', elinewidth=1, ls='none')
+            
+        if self.n_m != 0:
+            lambda_m = self.model_data[m_n-1][:, 0]
+            F_m = self.model_data[m_n-1][:, 1]
+            ax.scatter(lambda_m, F_m, s=1, color ='m', linewidths=1, label='model')
+
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
+        plt.xlabel('Wavelength (microns)')
+        plt.ylabel('Flux (Jy)')
+        if log != 0:
+            plt.yscale('log')
+            plt.xscale('log')
+        plt.title(self.name)
+        plt.legend(loc='upper right')
+
+        plt.show()
+            
+
+if __name__ == '__main__':            
+
+# The format of imported ground_spec_log for each star is an n X 3 numpy array or list of n X 3 numpy arrays. The columns are 0:wavelength (microns), 1:flux (Jy), 2:flux uncertainty (Jy).
+
+# Stars for which mid-IR ground-based spectra (at least) are available.
+    R_Aqr = Star('R_Aqr', n_g_p=5, n_g_s=5, n_s_s=1)           
+    RU_Vul = Star('RU_Vul', n_g_s=1)         
+    R_Aql = Star('R_Aql', n_g_s=1, n_s_s=5, n_m=1)
+    R_Hya = Star('R_Hya', n_g_s=1, n_s_s=1, n_m=1)
+    W_Hya = Star('W_Hya', n_g_p=1, n_g_s=1, n_s_s=2, n_m=1)
+    tet_Aps = Star('tet_Aps', n_g_s=1, n_s_s=1, n_m=1)       
+    R_Crt = Star('R_Crt', n_g_s=2)     
+    R_Leo = Star('R_Leo', n_g_p=1, n_g_s=6)     
+    T_Mic = Star('T_Mic', n_g_s=1, n_s_s=2, n_m=1)            
+    RT_Vir = Star('RT_Vir', n_g_p=1, n_g_s=6, n_s_s=1, n_m=1)
+    pi1_Gru = Star('pi1_Gru', n_g_s=1, n_s_s=1)       
+    omi_Ori = Star('omi_Ori', n_g_s=1)      
+    S_Ori = Star('S_Ori')
+    GX_Mon = Star('GX_Mon')
+    R_Cnc = Star('R_Cnc')
+    SV_Psc = Star('SV_Psc', n_s_s=1)
+    RR_Aql = Star('RR_Aql',  n_s_s=1)
+    OH_26506 = Star('OH_26506', n_g_p=1, n_s_s=1)
+    RR_Sco = Star('RR_Sco', n_g_s=1)         
+    R_Aur = Star('R_Aur')
+    SW_Vir = Star('SW_Vir', n_s_s=1)
+    RX_Boo = Star('RX_Boo', n_s_s=1)
+    RS_Lib = Star('RS_Lib', n_g_s=1, n_s_s=1)
+    RT_Sco = Star('RT_Sco', n_g_s=1)
+    RU_Sco = Star('RU_Sco', n_g_s=1)
+
+# Stars for which ground-based mid-IR photometry and sws atlas entries are available.
+    HD65750 = Star('HD65750', n_g_p=1, n_s_s=1)
+    WX_Psc = Star('WX_Psc', n_g_p=2, n_s_s=2)
+    IRAS_16342_3814 = Star('IRAS_16342_3814', n_g_p=2, n_s_s=1)
+    U_Her = Star('U_Her', n_g_p=1, n_s_s=1)
+    TX_Cam = Star('TX_Cam', n_g_p=1, n_s_s=1)
+    X_Her = Star('X_Her', n_g_p=1, n_s_s=1)
+    W_Aql = Star('W_Aql', n_g_p=1, n_s_s=1)
+    CH_Cyg = Star('CH_Cyg', n_g_p=1, n_s_s=2)
+    GY_Aql = Star('GY_Aql', n_g_p=1, n_s_s=1)
+    BI_Cyg = Star('BI_Cyg', n_g_p=1, n_s_s=1)
+    V_Cyg = Star('V_Cyg', n_g_p=1, n_s_s=6)
+    T_Cep = Star('T_Cep', n_g_p=1, n_s_s=8)
+    EP_Aqr = Star('EP_Aqr', n_g_p=1, n_s_s=2)
+    R_Cas = Star('R_Cas', n_g_p=1, n_s_s=8)
+    
+# Stars for which ground-based mid-IR photometry and Spitzer Heritage Archive spectroscopic entries are available.
+    HV12956 = Star('HV12956', n_g_p=1, n_s_s=1)
+    IRAS_04407_7000 = Star('IRAS_04407_7000', n_g_p=1, n_s_s=3)
+    IRAS_04498_6842 = Star('IRAS_04498_6842', n_g_p=1, n_s_s=3)
+    IRAS_05112_6755 = Star('IRAS_05112_6755', n_g_p=1, n_s_s=1)
+    OH_231842 = Star('OH_231842', n_g_p=1, n_s_s=20)
+    LEID_33062 = Star('LEID_33062', n_s_s=1)
+
+# Here you can write code to use the attributes of stars or plot SEDs.
+    WX_Psc.sed_plot(ymax=7000)

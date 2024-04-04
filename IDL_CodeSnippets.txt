@@ -1,0 +1,60 @@
+;#######################################################
+
+      filename_MIDI = star+"/MIDI/phase_all_N_band_spectra.sav"
+   
+      RESTORE, filename_MIDI
+      
+      MIDI_spec_wave_temp = spec_structure.spec_wave
+      MIDI_spec_flux_temp = spec_structure.spec_flux
+      MIDI_spec_err_temp  = spec_structure.spec_err
+      
+      MIDI_wave_start = 8.0 ;microns
+      MIDI_wave_end = 13.0  ;microns
+      
+      ind = WHERE((MIDI_spec_wave_temp GE MIDI_wave_start) AND (MIDI_spec_wave_temp LE MIDI_wave_end),count)
+      
+      MIDI_spec_wave = MAKE_ARRAY(count,/DOUBLE)
+      MIDI_spec_flux = MAKE_ARRAY(count,/DOUBLE)
+      MIDI_spec_err  = MAKE_ARRAY(count,/DOUBLE)
+      
+      FOR i=0, count-1 DO BEGIN
+         MIDI_spec_wave[i] = MIDI_spec_wave_temp[ind[i]]
+         MIDI_spec_flux[i] = MIDI_spec_flux_temp[ind[i]]
+         MIDI_spec_err[i]  = MIDI_spec_err_temp[ind[i]]
+      ENDFOR
+      
+      ;make error
+      MIDI_spec_wave_new = MAKE_ARRAY(2*count,/DOUBLE)
+      MIDI_spec_err_new  = MAKE_ARRAY(2*count,/DOUBLE)
+      FOR i=0, 2*count-1, 2 DO BEGIN
+      MIDI_spec_wave_new[i+0] = MIDI_spec_wave[i/2]
+      MIDI_spec_wave_new[i+1] = MIDI_spec_wave[i/2]
+      MIDI_spec_err_new[i+0]  = MIDI_spec_flux[i/2]+MIDI_spec_err[i/2]
+      MIDI_spec_err_new[i+1]  = MIDI_spec_flux[i/2]-MIDI_spec_err[i/2]
+      ENDFOR
+
+
+;#######################################################
+
+
+      ;(E1) overplot: MIDI data (only for target)
+      IF caltar EQ 1 THEN BEGIN
+         sym_index = 0 ;error
+         linestyle = 0
+         line_thick = 1.0
+         color = [150,255,150]
+      
+         iPLOT,MIDI_spec_wave_new,MIDI_spec_err_new,/NO_SAVEPROMPT,LINESTYLE=linestyle,THICK=line_thick,COLOR=color,$
+               SYM_COLOR=color,SYM_INDEX=sym_index,SYM_SIZE=sym_size,SYM_THICK=sym_thick,/OVERPLOT,XLOG=xlog,YLOG=ylog
+   
+         sym_index = 0 ;data
+         linestyle = 0
+         line_thick = 1.0
+         color = [0,255,0]
+         name = " MIDI"
+      
+         iPLOT,MIDI_spec_wave,MIDI_spec_flux,/NO_SAVEPROMPT,/OVERPLOT,XLOG=xlog,YLOG=ylog,$
+               INSERT_LEGEND=legend_loc,LINESTYLE=linestyle,THICK=line_thick,NAME=name,COLOR=color,$
+               SYM_COLOR=color,SYM_INDEX=sym_index,SYM_SIZE=sym_size,SYM_THICK=sym_thick
+
+;#######################################################

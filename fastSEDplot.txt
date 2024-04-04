@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 11 13:05:09 2022
+
+@author: garsnow1
+"""
+
+from Star_Data import Star
+
+#R_Aql = Star('R_Aql', n_g_s=1, n_s_s=5, n_m=1)
+#R_Aql.sed_plot(m_n=1, s_n=3, log=0, xmin=0, xmax=50, ymin=0, ymax=1000)
+# R_Aql.sed_plot(m_n=1, s_n=3, log=1, xmin=1, xmax=100, ymin=100, ymax=1000)
+
+#R_Hya = Star('R_Hya', n_g_s=1, n_s_s=1, n_m=1)
+#R_Hya.sed_plot(m_n=1, log=0, xmin=0, xmax=50, ymin=0, ymax=4000)
+# R_Hya.sed_plot(m_n=1, log=1, xmin=1, xmax=100, ymin=100, ymax=10000)
+
+#RT_Vir = Star('RT_Vir', n_g_p=1, n_g_s=6, n_s_s=1, n_m=1)
+#RT_Vir.sed_plot(m_n=1, g_n=3, log=0, xmin=0, xmax=50, ymin=0, ymax=1500)
+# RT_Vir.sed_plot(m_n=1, g_n=3, log=1, xmin=1, xmax=100, ymin=100, ymax=1000)
+
+#T_Mic = Star('T_Mic', n_g_s=1, n_s_s=2, n_m=1)
+#T_Mic.sed_plot(m_n=1, s_n=1, log=0, xmin=0, xmax=50, ymin=0, ymax=1500)
+# T_Mic.sed_plot(m_n=1, s_n=1, log=1, xmin=1, xmax=100, ymin=100, ymax=10000)
+
+#tet_Aps = Star('tet_Aps', n_g_s=1, n_s_s=1, n_m=1)
+#tet_Aps.sed_plot(m_n=1, log=0, xmin=0, xmax=50, ymin=0, ymax=3000)
+# tet_Aps.sed_plot(m_n=1, log=1, xmin=1, xmax=100, ymin=100, ymax=10000)
+
+#W_Hya = Star('W_Hya', n_g_p=1, n_g_s=1, n_s_s=2, n_m=1)
+#W_Hya.sed_plot(m_n=1, log=0, s_n=1, xmin=0, xmax=50, ymin=0, ymax=8000)
+# W_Hya.sed_plot(m_n=1, log=1, s_n=1, xmin=1, xmax=100, ymin=1000, ymax=10000)
